@@ -30,16 +30,17 @@ class Vocabulary(object):
 
 
 def load_vocab(json, threshold):
-    if os.path.isfile('savedVocab'):
-        with open('savedVocab', 'rb') as savedVocab:
-            vocab = pickle.load(savedVocab)
+    if os.path.isfile('saved_vocab.pkl'):
+        with open('saved_vocab.pkl', 'rb') as f:
+            vocab, loaded_threshold = pickle.load(f)
+            if loaded_threshold == threshold:
+                return vocab
             print("Using the saved vocab.")
 
-    else:
-        vocab = build_vocab(json, threshold)
-        with open('savedVocab', 'wb') as savedVocab:
-            pickle.dump(vocab, savedVocab)
-            print("Saved the vocab.")
+    vocab = build_vocab(json, threshold)
+    with open('saved_vocab.pkl', 'wb') as f:
+        pickle.dump((vocab, threshold), f)
+        print("Saved the vocab.")
 
     return vocab
 
@@ -54,7 +55,7 @@ def build_vocab(json, threshold):
         counter.update(tokens)
 
         if (i + 1) % 1000 == 0:
-            print("[{}/{}] Tokenized the captions.".format(i + 1, len(ids)))
+            print("[{}/{}] Tokenizing Captions.".format(i + 1, len(ids)))
 
     # If the word frequency is less than 'threshold', then the word is discarded.
     words = [word for word, cnt in counter.items() if cnt >= threshold]
@@ -67,6 +68,6 @@ def build_vocab(json, threshold):
     vocab.add_word('<unk>')
 
     # Add the words to the vocabulary.
-    for i, word in enumerate(words):
+    for word in words:
         vocab.add_word(word)
     return vocab

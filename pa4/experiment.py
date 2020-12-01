@@ -9,11 +9,11 @@ import numpy as np
 import torch
 from datetime import datetime
 
-from caption_utils import *
-from constants import ROOT_STATS_DIR
-from dataset_factory import get_datasets
-from file_utils import *
-from model_factory import get_model
+from .caption_utils import *
+from .constants import ROOT_STATS_DIR
+from .dataset_factory import get_datasets
+from .file_utils import *
+from .model_factory import get_model
 
 
 # Class to encapsulate a neural experiment.
@@ -53,6 +53,7 @@ class Experiment(object):
         # Load Experiment Data if available
         self.__load_experiment()
 
+
     # Loads the experiment data if exists to resume training from last saved checkpoint.
     def __load_experiment(self):
         os.makedirs(ROOT_STATS_DIR, exist_ok=True)
@@ -74,6 +75,7 @@ class Experiment(object):
             self.__model = self.__model.cuda().float()
             self.__criterion = self.__criterion.cuda()
 
+
     # Main method to run your experiment. Should be self-explanatory.
     def run(self):
         start_epoch = self.__current_epoch
@@ -86,14 +88,55 @@ class Experiment(object):
             self.__log_epoch_stats(start_time)
             self.__save_model()
 
+
     # TODO: Perform one training iteration on the whole dataset and return loss value
     def __train(self):
         self.__model.train()
         training_loss = 0
+        device = "cuda" if torch.cuda.is_available() else "cpu"
 
         for i, (images, captions, _) in enumerate(self.__train_loader):
-            raise NotImplementedError()
+            
+            images = images.to(device)
+            captions = captions.to(device)
+            print("captions type: " type(captions))
+            
+            self.__optimizer.zero_grad()
+            
+            with torch.set_grad_enabled(True):
+                
+                output = self.__model(images).to(device)
+                
+                # Should we apply relu over the value?
+                pass
+                # # _log_memory('batch start')
+                # inputs = inputs.to(device)
+                # labels = labels.to(device)
+                # # _log_memory('tensors transferred')
 
+                # optimizer.zero_grad()
+
+                # with torch.set_grad_enabled(train):
+                #     outputs = model(inputs).to(device)
+                #     # _log_memory('outputs computed')
+                #     _, preds = torch.max(outputs, 1)
+                #     # _log_memory('preds computed')
+                #     loss = criterion(outputs, labels)
+                #     # _log_memory('loss computed')
+                #     del outputs
+
+                #     if train:
+                #         loss.backward()
+                #         optimizer.step()
+                #         # _log_memory('backprop done')
+
+                # total_loss += loss.item() * inputs.size(0)
+                # total_correct += torch.sum(preds == labels.data)
+                # if _print_batches:
+                #     log(f'- MiniBatch: {batch_idx}')
+                #     log(f'  MiniBatch Loss: {loss}')
+                # del preds, inputs, labels
+            
         return training_loss
 
     # TODO: Perform one Pass on the validation set and return loss value. You may also update your best model here.
