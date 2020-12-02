@@ -4,10 +4,11 @@
 # Fall 2020
 ################################################################################
 
+from datetime import datetime
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from datetime import datetime
 
 from .caption_utils import *
 from .constants import ROOT_STATS_DIR
@@ -53,6 +54,8 @@ class Experiment(object):
         # Load Experiment Data if available
         self.__load_experiment()
 
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+
 
     # Loads the experiment data if exists to resume training from last saved checkpoint.
     def __load_experiment(self):
@@ -92,61 +95,57 @@ class Experiment(object):
     # TODO: Perform one training iteration on the whole dataset and return loss value
     def __train(self):
         self.__model.train()
+
+        device = self.device
         training_loss = 0
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        size = len(self.__train_loader)
 
         for i, (images, captions, _) in enumerate(self.__train_loader):
             
             images = images.to(device)
             captions = captions.to(device)
-            print("captions type: " type(captions))
+            print("captions type: ", type(captions))
             
             self.__optimizer.zero_grad()
             
             with torch.set_grad_enabled(True):
                 
-                output = self.__model(images).to(device)
+                output = self.__model(images, captions).to(device)
                 
-                # Should we apply relu over the value?
-                pass
-                # # _log_memory('batch start')
-                # inputs = inputs.to(device)
-                # labels = labels.to(device)
-                # # _log_memory('tensors transferred')
+                loss = self.__criterion(output.reshape(-1, output.shape[2]), captions.reshape(-1))
 
-                # optimizer.zero_grad()
-
-                # with torch.set_grad_enabled(train):
-                #     outputs = model(inputs).to(device)
-                #     # _log_memory('outputs computed')
-                #     _, preds = torch.max(outputs, 1)
-                #     # _log_memory('preds computed')
-                #     loss = criterion(outputs, labels)
-                #     # _log_memory('loss computed')
-                #     del outputs
-
-                #     if train:
-                #         loss.backward()
-                #         optimizer.step()
-                #         # _log_memory('backprop done')
-
-                # total_loss += loss.item() * inputs.size(0)
-                # total_correct += torch.sum(preds == labels.data)
-                # if _print_batches:
-                #     log(f'- MiniBatch: {batch_idx}')
-                #     log(f'  MiniBatch Loss: {loss}')
-                # del preds, inputs, labels
+                training_loss += loss / size
             
+                loss.backward()
+                self.__optimizer.step()
+    
+        self.__training_losses.append(training_loss)
+
         return training_loss
 
     # TODO: Perform one Pass on the validation set and return loss value. You may also update your best model here.
     def __val(self):
         self.__model.eval()
+
+        device = self.device
         val_loss = 0
+
+        size = len(self.__val_loader)
 
         with torch.no_grad():
             for i, (images, captions, _) in enumerate(self.__val_loader):
-                raise NotImplementedError()
+                images = images.to(device)
+                captions = captions.to(device)
+                print("captions type: ", type(captions))
+
+                output = self.__model(images, captions).to(device)
+
+                loss = self.__criterion(output.reshape(-1, output.shape[2]), captions.reshape(-1) )
+
+                val_loss += loss / size
+
+            self.__val_losses.append(val_loss)
 
         return val_loss
 
@@ -155,13 +154,29 @@ class Experiment(object):
     #  Note than you'll need image_ids and COCO object in this case to fetch all captions to generate bleu scores.
     def test(self):
         self.__model.eval()
+        
+        device = self.device
         test_loss = 0
         bleu1 = 0
         bleu4 = 0
 
         with torch.no_grad():
-            for iter, (images, captions, img_ids) in enumerate(self.__test_loader):
-                raise NotImplementedError()
+            for i, (images, captions, img_ids) in enumerate(self.__test_loader):
+                images = images.to(device)
+                captions = captions.to(device)
+                start = 
+                # x = self.encoderCNN(image).unsqueeze(0)
+                # states = None
+                # for _ in range(max_length):
+                    # hiddens, states = self.decoderRNN.lstm(x, states)
+                    # output = self.decoderRNN.linear(hiddens.squeeze(0))
+                    # predicted = output.argmax(1)
+                    # result_caption.append(predicted.item())
+                    # x = self.decoderRNN.embed(predicted).unsqueeze(0)
+                    # if vocabulary.itos[predicted.item()] == "<EOS>":
+                        # break
+
+        return [vocabulary.itos[idx] for idx in result_caption]
 
         result_str = "Test Performance: Loss: {}, Perplexity: {}, Bleu1: {}, Bleu4: {}".format(test_loss,
                                                                                                bleu1,

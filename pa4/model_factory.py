@@ -4,8 +4,10 @@
 # Fall 2020
 ################################################################################
 
+import torch
 from torch import nn
 from torchvision import models as model_zoo
+from vocab import Vocabulary
 
 TODO = object()
 
@@ -16,19 +18,41 @@ TODO = object()
 # https://pytorch.org/docs/stable/generated/torch.nn.utils.rnn.pack_padded_sequence.html#torch.nn.utils.rnn.pack_padded_sequence
 # https://stackoverflow.com/questions/51030782/why-do-we-pack-the-sequences-in-pytorch
 
+
+class Encoder(nn.Module):
+    def __init__(self, model: nn.Module):
+        self.model = model
+    
+    def forward(self, images):
+        return self.model(images)
+    
+
+class Decoder(nn.Module):
+    def __init__(self, model: nn.Module, embedding: nn.Module):
+        self.model = model
+        self.embedding = embedding
+
+    def forward(self, features, captions):
+        embeddings = self.embedding(captions)
+        embeddings = torch.cat((features.unsqueeze(0), embeddings), dim=0) # feature rows are stacked up vertically
+        return self.model(embeddings)
+
+    def generate_capions(self, image):
+        
+        
+# MODEL
 class ExperimentModel(nn.Module):
-    def __init__(self, encoder: nn.Module, decoder: nn.Module, embedding: nn.Embedding):
+    def __init__(self, encoder: Encoder, decoder: Decoder, embedding: nn.Embedding, vocab: Vocabulary):
         super().__init__()
         self.encoder = encoder
         self.decoder = decoder
         self.embedding = embedding
+        self.vocab = vocab
 
     def forward(self, images, captions):
-        batch_size = image.size(0)
-        latent_state = self.encoder(images)
-        packed_output, (ht, ct) = self.decoder(latent_state)
-        output = self.embedding()
-        return out
+        encoded = self.encoder(images)
+        outputs = self.decoder(encoded, captions) # LSTM takes in 1. current feature 2. hidden + cell state
+        return outputs
 
 
 def get_model(config_data, vocab):
@@ -41,12 +65,11 @@ def get_model(config_data, vocab):
     dropout = config_data['model']['dropout']
     nonlinearity = config_data['model'].get('nonlinearity') or 'tanh'
 
-    embedding = get_embedding()
+    embedding = get_embedding(len(vocab), embedding_size)
     encoder = get_encoder(output_size=embedding_size, fine_tune=False)
     if model_type == 'baseline':
         decoder = get_lstm(input_size=embedding_size, hidden_size=hidden_size, num_layers=1, dropout=dropout)
     elif model_type == 'baseline_variant_rnn':
-        # encoder = get_encoder(output_size=embedding_size, fine_tune=False)
         decoder = get_rnn(input_size=embedding_size, hidden_size=hidden_size, num_layers=1, dropout=dropout, nonlinearity=nonlinearity)
     else:
         raise NotImplementedError(f'Unknown model type {model_type}')
@@ -59,9 +82,8 @@ def get_model(config_data, vocab):
 # Low Level Factories
 
 # Embedding
-def get_embedding():
-    # TODO
-    ...
+def get_embedding(vocab_size, embed_size):
+    return nn.Embedding(vocab_size, embed_size) #
 
 # Encoder: CNN resnet50 Model
 def get_encoder(type_: str = 'resnet50', output_size: int = None, fine_tune: str = None, progress=False) -> model_zoo.ResNet:
@@ -81,7 +103,8 @@ def get_encoder(type_: str = 'resnet50', output_size: int = None, fine_tune: str
 
     in_features = model.fc.in_features
     model.fc = nn.Linear(in_features=in_features, out_features=output_size, bias=True)
-    return model
+    return Encoder(model)
+
 
 # Decoder: LSTM
 def get_lstm(input_size: int = None, hidden_size: int = None, num_layers: int = None, dropout: float = None) -> nn.LSTM:
@@ -108,3 +131,64 @@ def get_rnn(input_size: int = None, hidden_size: int = None, num_layers: int = N
     if nonlinearity is None:
         raise ValueError
     return nn.RNN(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, bias=True, dropout=dropout, nonlinearity=nonlinearity)
+    
+# class EncoderCNN(nn.Module):
+#     def __init__(self, embed_size, train_CNN=False):
+#         super(EncoderCNN, self).__init__()
+#         self.train_CNN = train_CNN
+#         self.inception = models.inception_v3(pretrained=True, aux_logits=False)
+#         self.inception.fc = nn.Linear(self.inception.fc.in_features, embed_size)
+#         self.relu = nn.ReLU()
+#         self.times = []
+#         self.dropout = nn.Dropout(0.5)
+
+#     def forward(self, images):
+#         features = self.inception(images)
+#         return self.dropout(self.relu(features))
+
+
+# class DecoderRNN(nn.Module):
+#     def __init__(self, embed_size, hidden_size, vocab_size, num_layers):
+#         super(DecoderRNN, self).__init__()
+#         self.embed = nn.Embedding(vocab_size, embed_size)
+#         self.lstm = nn.LSTM(embed_size, hidden_size, num_layers)
+#         self.linear = nn.Linear(hidden_size, vocab_size)
+#         self.dropout = nn.Dropout(0.5)
+
+#     def forward(self, features, captions):
+#         embeddings = self.dropout(self.embed(captions))
+#         embeddings = torch.cat((features.unsqueeze(0), embeddings), dim=0)
+#         hiddens, _ = self.lstm(embeddings)
+#         outputs = self.linear(hiddens)
+#         return outputs
+
+
+# class CNNtoRNN(nn.Module):
+#     def __init__(self, embed_size, hidden_size, vocab_size, num_layers):
+#         super(CNNtoRNN, self).__init__()
+#         self.encoderCNN = EncoderCNN(embed_size)
+#         self.decoderRNN = DecoderRNN(embed_size, hidden_size, vocab_size, num_layers)
+
+#     def forward(self, images, captions):
+#         features = self.encoderCNN(images)
+#         outputs = self.decoderRNN(features, captions)
+#         return outputs
+
+#     def caption_image(self, image, vocabulary, max_length=50):
+#         result_caption = []
+
+#         with torch.no_grad():
+#             x = self.encoderCNN(image).unsqueeze(0)
+#             states = None
+
+#             for _ in range(max_length):
+#                 hiddens, states = self.decoderRNN.lstm(x, states)
+#                 output = self.decoderRNN.linear(hiddens.squeeze(0))
+#                 predicted = output.argmax(1)
+#                 result_caption.append(predicted.item())
+#                 x = self.decoderRNN.embed(predicted).unsqueeze(0)
+
+#                 if vocabulary.itos[predicted.item()] == "<EOS>":
+#                     break
+
+#         return [vocabulary.itos[idx] for idx in result_caption]
