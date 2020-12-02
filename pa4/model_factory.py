@@ -84,6 +84,7 @@ def get_model(config_data, vocab):
     embedding_size = config_data['model']['embedding_size']
     model_type = config_data['model']['model_type']
     dropout = config_data['model']['dropout']
+    deterministic = config_data['model'].get('deterministic') or True
     nonlinearity = config_data['model'].get('nonlinearity') or 'tanh'
 
     embedding = get_embedding(len(vocab), embedding_size)
@@ -95,7 +96,7 @@ def get_model(config_data, vocab):
     else:
         raise NotImplementedError(f'Unknown model type {model_type}')
 
-    model = ExperimentModel(encoder, decoder, embedding)
+    model = ExperimentModel(encoder, decoder, embedding, deterministic)
 
     return model
 

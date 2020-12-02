@@ -165,7 +165,7 @@ class Experiment(object):
             for i, (images, captions, _) in enumerate(self.__test_loader):
                 images = images.to(device)
                 captions = captions.to(device)
-                generated_captions = self.__model.generate_captions(images)
+                generated_captions = self.__model.generate_captions(images).to(device)
                 loss = self.__criterion(generated_captions.reshape(-1, generated_captions.shape[2]), captions.reshape(-1) )
                 test_loss += loss / size
                 bleu1_score += bleu1(captions, generated_captions) / size
@@ -177,14 +177,6 @@ class Experiment(object):
         self.__log(result_str)
 
         return test_loss, bleu1, bleu4
-
-    # def bleu1(reference_captions, predicted_caption):
-    # return 100 * sentence_bleu(reference_captions, predicted_caption,
-    #                            weights=(1, 0, 0, 0), smoothing_function=SmoothingFunction().method1)
-
-    # def bleu4(reference_captions, predicted_caption):
-    # return 100 * sentence_bleu(reference_captions, predicted_caption,
-    #                            weights=(0, 0, 0, 1), smoothing_function=SmoothingFunction().method1)
 
     def __save_model(self):
         root_model_path = os.path.join(self.__experiment_dir, 'latest_model.pt')
