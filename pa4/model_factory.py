@@ -7,7 +7,7 @@
 import torch
 from torch import nn
 from torchvision import models as model_zoo
-from vocab import Vocabulary
+from pa4.vocab import Vocabulary
 
 TODO = object()
 
