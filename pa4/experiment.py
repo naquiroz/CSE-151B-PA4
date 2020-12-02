@@ -162,8 +162,9 @@ class Experiment(object):
 
         with torch.no_grad():
             size = len(self.__test_loader)
-            for i, (images, captions, img_ids) in enumerate(self.__test_loader):
+            for i, (images, captions, _) in enumerate(self.__test_loader):
                 images = images.to(device)
+                captions = captions.to(device)
                 generated_captions = self.__model.generate_captions(images)
                 loss = self.__criterion(generated_captions.reshape(-1, generated_captions.shape[2]), captions.reshape(-1) )
                 test_loss += loss / size
