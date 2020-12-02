@@ -157,33 +157,33 @@ class Experiment(object):
         
         device = self.device
         test_loss = 0
-        bleu1 = 0
-        bleu4 = 0
+        bleu1_score = 0
+        bleu4_sc = 0
 
         with torch.no_grad():
+            size = len(self.__test_loader)
             for i, (images, captions, img_ids) in enumerate(self.__test_loader):
                 images = images.to(device)
-                captions = captions.to(device)
-                start = 
-                # x = self.encoderCNN(image).unsqueeze(0)
-                # states = None
-                # for _ in range(max_length):
-                    # hiddens, states = self.decoderRNN.lstm(x, states)
-                    # output = self.decoderRNN.linear(hiddens.squeeze(0))
-                    # predicted = output.argmax(1)
-                    # result_caption.append(predicted.item())
-                    # x = self.decoderRNN.embed(predicted).unsqueeze(0)
-                    # if vocabulary.itos[predicted.item()] == "<EOS>":
-                        # break
-
-        return [vocabulary.itos[idx] for idx in result_caption]
-
+                generated_captions = self.__model.generate_captions(images)
+                loss = self.__criterion(generated_captions.reshape(-1, generated_captions.shape[2]), captions.reshape(-1) )
+                test_loss += loss / size
+                bleu1_score += bleu1(captions, generated_captions) / size
+                bleu4_score += bleu4(captions, generated_captions) / size
+                
         result_str = "Test Performance: Loss: {}, Perplexity: {}, Bleu1: {}, Bleu4: {}".format(test_loss,
-                                                                                               bleu1,
-                                                                                               bleu4)
+                                                                                               bleu1_score,
+                                                                                               bleu4_score)
         self.__log(result_str)
 
         return test_loss, bleu1, bleu4
+
+    # def bleu1(reference_captions, predicted_caption):
+    # return 100 * sentence_bleu(reference_captions, predicted_caption,
+    #                            weights=(1, 0, 0, 0), smoothing_function=SmoothingFunction().method1)
+
+    # def bleu4(reference_captions, predicted_caption):
+    # return 100 * sentence_bleu(reference_captions, predicted_caption,
+    #                            weights=(0, 0, 0, 1), smoothing_function=SmoothingFunction().method1)
 
     def __save_model(self):
         root_model_path = os.path.join(self.__experiment_dir, 'latest_model.pt')

@@ -37,22 +37,43 @@ class Decoder(nn.Module):
         embeddings = torch.cat((features.unsqueeze(0), embeddings), dim=0) # feature rows are stacked up vertically
         return self.model(embeddings)
 
-    def generate_capions(self, image):
-        
         
 # MODEL
 class ExperimentModel(nn.Module):
-    def __init__(self, encoder: Encoder, decoder: Decoder, embedding: nn.Embedding, vocab: Vocabulary):
+    def __init__(self, encoder: Encoder, decoder: Decoder, embedding: nn.Embedding, vocab: Vocabulary, deterministic: bool):
         super().__init__()
         self.encoder = encoder
         self.decoder = decoder
         self.embedding = embedding
         self.vocab = vocab
+        self.deterministic = deterministic
 
     def forward(self, images, captions):
         encoded = self.encoder(images)
         outputs = self.decoder(encoded, captions) # LSTM takes in 1. current feature 2. hidden + cell state
         return outputs
+
+    def apply_generation(self, outputs):
+        if self.deterministic:
+            return outputs.argmax(1)
+        else:
+            # Stochastic
+            raise NotImplementedError()
+    
+    
+    def generate_captions(self, images):
+        captions = []
+        max_length = 300 # Where can we get this number
+        input_ = self.encoder(image).unsqueeze(0)
+        states = None
+        for _ in range(max_length):
+            hidden_outputs, states = self.decoder.model(input_, states)
+            prediction = self.apply_generation(hidden_output)
+            captions.append(prediction)
+            input_ = self.decoder.embedding(prediction).unsqueeze(0)
+        return torch.Tensor(captions)
+
+
 
 
 def get_model(config_data, vocab):
