@@ -31,8 +31,13 @@ class Experiment(object):
         self.__experiment_dir = os.path.join(ROOT_STATS_DIR, self.__name)
 
         # Load Datasets
-        self.__coco_test, self.__vocab, self.__train_loader, self.__val_loader, self.__test_loader = get_datasets(
-            config_data)
+        (
+            self.__coco_test,
+            self.__vocab,
+            self.__train_loader,
+            self.__val_loader,
+            self.__test_loader,
+        ) = get_datasets(config_data)
 
         # Setup Experiment
         self.__generation_config = config_data['generation']
@@ -40,12 +45,15 @@ class Experiment(object):
         self.__current_epoch = 0
         self.__training_losses = []
         self.__val_losses = []
-        self.__best_model = None  # Save your best model in this field and use this in test method.
+        self.__best_model = (
+            None  # Save your best model in this field and use this in test method.
+        )
 
         # Init Model
         self.__model = get_model(config_data, self.__vocab)
 
         # TODO: Set these Criterion and Optimizers Correctly
+        # TODO: Make sure Criterion and Optimizer work correctly
         self.__criterion = None
         self.__optimizer = None
 
@@ -56,17 +64,22 @@ class Experiment(object):
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-
     # Loads the experiment data if exists to resume training from last saved checkpoint.
     def __load_experiment(self):
         os.makedirs(ROOT_STATS_DIR, exist_ok=True)
 
         if os.path.exists(self.__experiment_dir):
-            self.__training_losses = read_file_in_dir(self.__experiment_dir, 'training_losses.txt')
-            self.__val_losses = read_file_in_dir(self.__experiment_dir, 'val_losses.txt')
+            self.__training_losses = read_file_in_dir(
+                self.__experiment_dir, 'training_losses.txt'
+            )
+            self.__val_losses = read_file_in_dir(
+                self.__experiment_dir, 'val_losses.txt'
+            )
             self.__current_epoch = len(self.__training_losses)
 
-            state_dict = torch.load(os.path.join(self.__experiment_dir, 'latest_model.pt'))
+            state_dict = torch.load(
+                os.path.join(self.__experiment_dir, 'latest_model.pt')
+            )
             self.__model.load_state_dict(state_dict['model'])
             self.__optimizer.load_state_dict(state_dict['optimizer'])
 
@@ -78,11 +91,12 @@ class Experiment(object):
             self.__model = self.__model.cuda().float()
             self.__criterion = self.__criterion.cuda()
 
-
     # Main method to run your experiment. Should be self-explanatory.
     def run(self):
         start_epoch = self.__current_epoch
-        for epoch in range(start_epoch, self.__epochs):  # loop over the dataset multiple times
+        for epoch in range(
+            start_epoch, self.__epochs
+        ):  # loop over the dataset multiple times
             start_time = datetime.now()
             self.__current_epoch = epoch
             train_loss = self.__train()
@@ -90,7 +104,6 @@ class Experiment(object):
             self.__record_stats(train_loss, val_loss)
             self.__log_epoch_stats(start_time)
             self.__save_model()
-
 
     # TODO: Perform one training iteration on the whole dataset and return loss value
     def __train(self):
@@ -102,24 +115,26 @@ class Experiment(object):
         size = len(self.__train_loader)
 
         for i, (images, captions, _) in enumerate(self.__train_loader):
-            
+
             images = images.to(device)
             captions = captions.to(device)
             print("captions type: ", type(captions))
-            
+
             self.__optimizer.zero_grad()
-            
+
             with torch.set_grad_enabled(True):
-                
+
                 output = self.__model(images, captions).to(device)
-                
-                loss = self.__criterion(output.reshape(-1, output.shape[2]), captions.reshape(-1))
+
+                loss = self.__criterion(
+                    output.reshape(-1, output.shape[2]), captions.reshape(-1)
+                )
 
                 training_loss += loss / size
-            
+
                 loss.backward()
                 self.__optimizer.step()
-    
+
         self.__training_losses.append(training_loss)
 
         return training_loss
@@ -141,7 +156,9 @@ class Experiment(object):
 
                 output = self.__model(images, captions).to(device)
 
-                loss = self.__criterion(output.reshape(-1, output.shape[2]), captions.reshape(-1) )
+                loss = self.__criterion(
+                    output.reshape(-1, output.shape[2]), captions.reshape(-1)
+                )
 
                 val_loss += loss / size
 
@@ -154,26 +171,35 @@ class Experiment(object):
     #  Note than you'll need image_ids and COCO object in this case to fetch all captions to generate bleu scores.
     def test(self):
         self.__model.eval()
-        
+
         device = self.device
         test_loss = 0
-        bleu1_score = 0
-        bleu4_sc = 0
+        bleu1 = 0
+        bleu4 = 0
 
         with torch.no_grad():
-            size = len(self.__test_loader)
-            for i, (images, captions, _) in enumerate(self.__test_loader):
+            for i, (images, captions, img_ids) in enumerate(self.__test_loader):
                 images = images.to(device)
                 captions = captions.to(device)
-                generated_captions = self.__model.generate_captions(images).to(device)
-                loss = self.__criterion(generated_captions.reshape(-1, generated_captions.shape[2]), captions.reshape(-1) )
-                test_loss += loss / size
-                bleu1_score += bleu1(captions, generated_captions) / size
-                bleu4_score += bleu4(captions, generated_captions) / size
-                
-        result_str = "Test Performance: Loss: {}, Perplexity: {}, Bleu1: {}, Bleu4: {}".format(test_loss,
-                                                                                               bleu1_score,
-                                                                                               bleu4_score)
+                start = ...
+                # x = self.encoderCNN(image).unsqueeze(0)
+                # states = None
+                # for _ in range(max_length):
+                # hiddens, states = self.decoderRNN.lstm(x, states)
+                # output = self.decoderRNN.linear(hiddens.squeeze(0))
+                # predicted = output.argmax(1)
+                # result_caption.append(predicted.item())
+                # x = self.decoderRNN.embed(predicted).unsqueeze(0)
+                # if vocabulary.itos[predicted.item()] == "<EOS>":
+                # break
+
+        return [vocabulary.itos[idx] for idx in result_caption]
+
+        result_str = (
+            "Test Performance: Loss: {}, Perplexity: {}, Bleu1: {}, Bleu4: {}".format(
+                test_loss, bleu1, bleu4
+            )
+        )
         self.__log(result_str)
 
         return test_loss, bleu1, bleu4
@@ -190,7 +216,9 @@ class Experiment(object):
 
         self.plot_stats()
 
-        write_to_file_in_dir(self.__experiment_dir, 'training_losses.txt', self.__training_losses)
+        write_to_file_in_dir(
+            self.__experiment_dir, 'training_losses.txt', self.__training_losses
+        )
         write_to_file_in_dir(self.__experiment_dir, 'val_losses.txt', self.__val_losses)
 
     def __log(self, log_str, file_name=None):
@@ -205,8 +233,13 @@ class Experiment(object):
         train_loss = self.__training_losses[self.__current_epoch]
         val_loss = self.__val_losses[self.__current_epoch]
         summary_str = "Epoch: {}, Train Loss: {}, Val Loss: {}, Took {}, ETA: {}\n"
-        summary_str = summary_str.format(self.__current_epoch + 1, train_loss, val_loss, str(time_elapsed),
-                                         str(time_to_completion))
+        summary_str = summary_str.format(
+            self.__current_epoch + 1,
+            train_loss,
+            val_loss,
+            str(time_elapsed),
+            str(time_to_completion),
+        )
         self.__log(summary_str, 'epoch.log')
 
     def plot_stats(self):

@@ -4,12 +4,13 @@
 # Fall 2020
 ################################################################################
 
-import torch
-import torchvision.transforms as transforms
-import torch.utils.data as data
 import os
-import numpy as np
+
 import nltk
+import numpy as np
+import torch
+import torch.utils.data as data
+import torchvision.transforms as transforms
 from PIL import Image
 from pycocotools.coco import COCO
 
@@ -30,13 +31,21 @@ class CocoDataset(data.Dataset):
         self.coco = COCO(json)
         self.ids = ids
         self.vocab = vocab
-        self.normalize = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
+        self.normalize = transforms.Compose(
+            [
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                ),
+            ]
+        )
 
         self.resize = transforms.Compose(
-            [transforms.Resize(img_size, interpolation=2), transforms.CenterCrop(img_size)])
+            [
+                transforms.Resize(img_size, interpolation=2),
+                transforms.CenterCrop(img_size),
+            ]
+        )
 
     def __getitem__(self, index):
         """Returns one data pair (image and caption)."""
@@ -45,7 +54,7 @@ class CocoDataset(data.Dataset):
         ann_id = self.ids[index]
         caption = coco.anns[ann_id]['caption']
         img_id = coco.anns[ann_id]['image_id']
-        path = coco.loadImgs(img_id)[0]['file_name'];
+        path = coco.loadImgs(img_id)[0]['file_name']
         image = Image.open(os.path.join(self.root, path)).convert('RGB')
         image = self.resize(image)
         image = self.normalize(np.asarray(image))

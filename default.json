@@ -19,7 +19,8 @@
   "model": {
     "hidden_size": 512,
     "embedding_size": 300,
-    "model_type": "baseline"
+    "model_type": "baseline",
+    "dropout": 0
   },
   "generation": {
     "max_length": 20,

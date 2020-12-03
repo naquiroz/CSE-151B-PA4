@@ -1,9 +1,15 @@
-##Taken from https://github.com/yunjey/pytorch-tutorial/blob/master/tutorials/03-advanced/image_captioning/build_vocab.py
-import nltk
+# Taken from https://github.com/yunjey/pytorch-tutorial/blob/master/tutorials/03-advanced/image_captioning/build_vocab.py
+import copy
+import csv
+import json
+import os
+import pickle
 from collections import Counter
-from pycocotools.coco import COCO
-import os, pickle, json, csv, copy
 
+import nltk
+from pycocotools.coco import COCO
+
+from .utils import tenumerate
 
 # A simple wrapper class for Vocabulary. No changes are required in this file
 class Vocabulary(object):
@@ -49,8 +55,8 @@ def build_vocab(json, threshold):
     coco = COCO(json)
     counter = Counter()
     ids = coco.anns.keys()
-    for i, id in enumerate(ids):
-        caption = str(coco.anns[id]['caption'])
+    for i, id_ in tenumerate(ids):
+        caption = str(coco.anns[id_]['caption'])
         tokens = nltk.tokenize.word_tokenize(caption.lower())
         counter.update(tokens)
 

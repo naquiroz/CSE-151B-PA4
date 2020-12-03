@@ -4,12 +4,14 @@
 # Fall 2020
 ################################################################################
 
-import csv, os
-from torch.utils.data import DataLoader
-from pycocotools.coco import COCO
+import csv
+import os
 
-from .vocab import load_vocab
+from pycocotools.coco import COCO
+from torch.utils.data import DataLoader
+
 from .coco_dataset import CocoDataset, collate_fn
+from .vocab import load_vocab
 
 
 # Builds your datasets here based on the configuration.
@@ -32,34 +34,66 @@ def get_datasets(config_data):
     vocab_threshold = config_data['dataset']['vocabulary_threshold']
     vocabulary = load_vocab(train_annotation_file, vocab_threshold)
 
-    train_data_loader = get_coco_dataloader(train_ids_file_path, root_train, train_annotation_file, coco, vocabulary,
-                                            config_data)
-    val_data_loader = get_coco_dataloader(val_ids_file_path, root_val, train_annotation_file, coco, vocabulary,
-                                          config_data)
-    test_data_loader = get_coco_dataloader(test_ids_file_path, root_test, test_annotation_file, coco_test, vocabulary,
-                                           config_data)
+    train_data_loader = get_coco_dataloader(
+        train_ids_file_path,
+        root_train,
+        train_annotation_file,
+        coco,
+        vocabulary,
+        config_data,
+    )
+    val_data_loader = get_coco_dataloader(
+        val_ids_file_path,
+        root_val,
+        train_annotation_file,
+        coco,
+        vocabulary,
+        config_data,
+    )
+    test_data_loader = get_coco_dataloader(
+        test_ids_file_path,
+        root_test,
+        test_annotation_file,
+        coco_test,
+        vocabulary,
+        config_data,
+    )
 
     return coco_test, vocabulary, train_data_loader, val_data_loader, test_data_loader
 
 
-def get_coco_dataloader(img_ids_file_path, imgs_root_dir, annotation_file_path, coco_obj, vocabulary, config_data):
+def get_coco_dataloader(
+    img_ids_file_path,
+    imgs_root_dir,
+    annotation_file_path,
+    coco_obj,
+    vocabulary,
+    config_data,
+):
     with open(img_ids_file_path, 'r') as f:
         reader = csv.reader(f)
         img_ids = list(reader)
 
     img_ids = [int(i) for i in img_ids[0]]
 
-    ann_ids = [coco_obj.imgToAnns[img_ids[i]][j]['id'] for i in range(0, len(img_ids)) for j in
-               range(0, len(coco_obj.imgToAnns[img_ids[i]]))]
+    ann_ids = [
+        coco_obj.imgToAnns[img_ids[i]][j]['id']
+        for i in range(0, len(img_ids))
+        for j in range(0, len(coco_obj.imgToAnns[img_ids[i]]))
+    ]
 
-    dataset = CocoDataset(root=imgs_root_dir,
-                          json=annotation_file_path,
-                          ids=ann_ids,
-                          vocab=vocabulary,
-                          img_size=config_data['dataset']['img_size'])
-    return DataLoader(dataset=dataset,
-                      batch_size=config_data['dataset']['batch_size'],
-                      shuffle=True,
-                      num_workers=config_data['dataset']['num_workers'],
-                      collate_fn=collate_fn,
-                      pin_memory=True)
+    dataset = CocoDataset(
+        root=imgs_root_dir,
+        json=annotation_file_path,
+        ids=ann_ids,
+        vocab=vocabulary,
+        img_size=config_data['dataset']['img_size'],
+    )
+    return DataLoader(
+        dataset=dataset,
+        batch_size=config_data['dataset']['batch_size'],
+        shuffle=True,
+        num_workers=config_data['dataset']['num_workers'],
+        collate_fn=collate_fn,
+        pin_memory=True,
+    )
