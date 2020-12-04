@@ -35,12 +35,8 @@ class Decoder(nn.Module):
         self.model = model
         self.embedding = embedding
 
-    def forward(self, features, captions):
-        embeddings = self.embedding(captions)  # 64xVAR_LENxEMBED_DIM
-        # ---------------------
-        #                      \ 64x1xEMBED_DIMS
-        embeddings = torch.cat((features.unsqueeze(1), embeddings), dim=1)  # 64x(VAR_LEN+1)xEMBED_DIMS
-        return self.model(embeddings)
+    def forward(self, features):
+        return self.model(features)
 
         
 # MODEL
@@ -54,7 +50,11 @@ class ExperimentModel(nn.Module):
 
     def forward(self, images, captions):
         encoded = self.encoder(images)
-        outputs = self.decoder(encoded, captions)  # LSTM takes in 1. current feature 2. hidden + cell state
+        embeddings = self.embedding(captions)  # 64xVAR_LENxEMBED_DIM
+        # ---------------------
+        #                      \ 64x1xEMBED_DIMS
+        embeddings = torch.cat((encoded.unsqueeze(1), embeddings), dim=1)  # 64x(VAR_LEN+1)xEMBED_DIMS
+        outputs = self.decoder(embeddings)  # LSTM takes in 1. current feature 2. hidden + cell state
         return outputs
 
     # WIP: Stochastic
@@ -206,7 +206,7 @@ def get_lstm(
         input_size=input_size,
         hidden_size=hidden_size,
         num_layers=num_layers,
-        ##bias=True,
+        bias=True,
         dropout=dropout,
         batch_first=True,
     )
