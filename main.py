@@ -4,7 +4,7 @@
 # Fall 2020
 ################################################################################
 
-from .experiment import Experiment
+from pa4.experiment import Experiment
 import sys
 
 # Main Driver for your code. Either run `python main.py` which will run the experiment with default config
