@@ -121,16 +121,13 @@ class Experiment(object):
 
             images = images.to(device)
             captions = captions.to(device)
-            print("img size: ", len(images))
-            print("captions size: ", len(captions))
 
             self.__optimizer.zero_grad()
 
             with torch.set_grad_enabled(True):
                 
-                output, state = self.__model(images, captions)
+                output, (h, c) = self.__model(images, captions)
                 print("train output shape: ", output.shape )
-                print("state shape: ", state.shape)
 
                 loss = self.__criterion(
                     output.reshape(-1, output.shape[2]), captions.reshape(-1)
