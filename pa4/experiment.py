@@ -128,6 +128,7 @@ class Experiment(object):
                 
                 output, (h, c) = self.__model(images, captions)
                 print("train output shape: ", output.shape )
+                print("caption output shape: ", captions.shape )
 
                 loss = self.__criterion(
                     output.reshape(-1, output.shape[2]), captions.reshape(-1)
