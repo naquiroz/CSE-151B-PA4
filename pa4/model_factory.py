@@ -150,7 +150,6 @@ def get_model(config_data, vocab):
     model = ExperimentModel(encoder, decoder, embedding, vocab)
 
     return model
-# TypeError: __init__() missing 1 required positional argument: 'embedding'
 
 
 # Low Level Factories
@@ -207,7 +206,7 @@ def get_lstm(
         input_size=input_size,
         hidden_size=hidden_size,
         num_layers=num_layers,
-        bias=True,
+        ##bias=True,
         dropout=dropout,
         batch_first=True,
     )
