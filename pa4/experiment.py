@@ -186,7 +186,7 @@ class Experiment(object):
         bleu4_score = 0
 
         with torch.no_grad():
-            for i, (images, captions, _) in enumerate(self.__test_loader):
+            for i, (images, captions, img_ids) in enumerate(self.__test_loader):
                 size = len(images)
                 images = images.to(device)
                 captions = captions.to(device)
