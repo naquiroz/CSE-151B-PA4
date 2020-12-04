@@ -9,6 +9,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+import torch.nn as nn
 
 from .caption_utils import *
 from .constants import ROOT_STATS_DIR
@@ -23,6 +24,7 @@ from .model_factory import get_model
 # You are free to modify or restructure the code as per your convenience.
 class Experiment(object):
     def __init__(self, name):
+        # Load .json parameters into config_data
         config_data = read_file_in_dir('./', name + '.json')
         if config_data is None:
             raise Exception("Configuration file doesn't exist: ", name)
@@ -54,8 +56,8 @@ class Experiment(object):
 
         # TODO: Set these Criterion and Optimizers Correctly
         # TODO: Make sure Criterion and Optimizer work correctly
-        self.__criterion = None
-        self.__optimizer = None
+        self.__criterion = nn.CrossEntropyLoss()
+        self.__optimizer = torch.optim.Adam(self.__model.parameters(), config_data['experiment']["learning_rate"])
 
         self.__init_model()
 
@@ -69,19 +71,20 @@ class Experiment(object):
         os.makedirs(ROOT_STATS_DIR, exist_ok=True)
 
         if os.path.exists(self.__experiment_dir):
-            self.__training_losses = read_file_in_dir(
-                self.__experiment_dir, 'training_losses.txt'
-            )
-            self.__val_losses = read_file_in_dir(
-                self.__experiment_dir, 'val_losses.txt'
-            )
-            self.__current_epoch = len(self.__training_losses)
+            print("Loading")
+#             self.__training_losses = read_file_in_dir(
+#                 self.__experiment_dir, 'training_losses.txt'
+#             )
+#             self.__val_losses = read_file_in_dir(
+#                 self.__experiment_dir, 'val_losses.txt'
+#             )
+#             self.__current_epoch = len(self.__training_losses)
 
-            state_dict = torch.load(
-                os.path.join(self.__experiment_dir, 'latest_model.pt')
-            )
-            self.__model.load_state_dict(state_dict['model'])
-            self.__optimizer.load_state_dict(state_dict['optimizer'])
+#             state_dict = torch.load(
+#                 os.path.join(self.__experiment_dir, 'latest_model.pt')
+#             )
+#             self.__model.load_state_dict(state_dict['model'])
+#             self.__optimizer.load_state_dict(state_dict['optimizer'])
 
         else:
             os.makedirs(self.__experiment_dir)
@@ -124,7 +127,9 @@ class Experiment(object):
 
             with torch.set_grad_enabled(True):
 
-                output = self.__model(images, captions).to(device)
+                output = self.__model(images, captions)
+                print("train output size: ", len(output) )
+                print("train output: ", output)
 
                 loss = self.__criterion(
                     output.reshape(-1, output.shape[2]), captions.reshape(-1)
@@ -139,6 +144,8 @@ class Experiment(object):
 
         return training_loss
 
+    
+    
     # TODO: Perform one Pass on the validation set and return loss value. You may also update your best model here.
     def __val(self):
         self.__model.eval()

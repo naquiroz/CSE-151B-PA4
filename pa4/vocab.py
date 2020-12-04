@@ -9,7 +9,7 @@ from collections import Counter
 import nltk
 from pycocotools.coco import COCO
 
-from .utils import tenumerate
+# from .utils import tenumerate
 
 # A simple wrapper class for Vocabulary. No changes are required in this file
 class Vocabulary(object):

@@ -81,29 +81,29 @@ class ExperimentModel(nn.Module):
 
 
 
-def get_model(config_data, vocab):
-    """
-    High Level Factory
-    """
-    hidden_size = config_data['model']['hidden_size']
-    embedding_size = config_data['model']['embedding_size']
-    model_type = config_data['model']['model_type']
-    dropout = config_data['model']['dropout']
-    deterministic = config_data['model'].get('deterministic') or True
-    nonlinearity = config_data['model'].get('nonlinearity') or 'tanh'
+# def get_model(config_data, vocab):
+#     """
+#     High Level Factory
+#     """
+#     hidden_size = config_data['model']['hidden_size']
+#     embedding_size = config_data['model']['embedding_size']
+#     model_type = config_data['model']['model_type']
+#     dropout = config_data['model']['dropout']
+#     deterministic = config_data['model'].get('deterministic') or True
+#     nonlinearity = config_data['model'].get('nonlinearity') or 'tanh'
 
-    embedding = get_embedding(len(vocab), embedding_size)
-    encoder = get_encoder(output_size=embedding_size, fine_tune=False)
-    if model_type == 'baseline':
-        decoder = get_lstm(input_size=embedding_size, hidden_size=hidden_size, num_layers=1, dropout=dropout)
-    elif model_type == 'baseline_variant_rnn':
-        decoder = get_rnn(input_size=embedding_size, hidden_size=hidden_size, num_layers=1, dropout=dropout, nonlinearity=nonlinearity)
-    else:
-        raise NotImplementedError(f'Unknown model type {model_type}')
+#     embedding = get_embedding(len(vocab), embedding_size)
+#     encoder = get_encoder(output_size=embedding_size, fine_tune=False)
+#     if model_type == 'baseline':
+#         decoder = get_lstm(input_size=embedding_size, hidden_size=hidden_size, num_layers=1, dropout=dropout)
+#     elif model_type == 'baseline_variant_rnn':
+#         decoder = get_rnn(input_size=embedding_size, hidden_size=hidden_size, num_layers=1, dropout=dropout, nonlinearity=nonlinearity)
+#     else:
+#         raise NotImplementedError(f'Unknown model type {model_type}')
 
-    model = ExperimentModel(encoder, decoder, embedding, deterministic)
+#     model = ExperimentModel(encoder, decoder, embedding, deterministic)
 
-    return model
+#     return model
 
 
 def get_model(config_data, vocab):
@@ -125,15 +125,19 @@ def get_model(config_data, vocab):
                 hidden_size=hidden_size,
                 num_layers=1,
                 dropout=dropout,
-            )
+            ),
+            embedding
         )
     elif model_type == 'baseline_variant_rnn':
-        decoder = get_rnn(
-            input_size=embedding_size,
-            hidden_size=hidden_size,
-            num_layers=1,
-            dropout=dropout,
-            nonlinearity=nonlinearity,
+        decoder = Decoder( 
+            get_rnn(
+                input_size=embedding_size,
+                hidden_size=hidden_size,
+                num_layers=1,
+                dropout=dropout,
+                nonlinearity=nonlinearity,
+            ),
+            embedding
         )
     else:
         raise NotImplementedError(f'Unknown model type {model_type}')
@@ -141,6 +145,7 @@ def get_model(config_data, vocab):
     model = ExperimentModel(encoder, decoder, embedding, vocab)
 
     return model
+# TypeError: __init__() missing 1 required positional argument: 'embedding'
 
 
 # Low Level Factories
