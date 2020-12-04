@@ -39,7 +39,7 @@ class Decoder(nn.Module):
         embeddings = self.embedding(captions)  # 64xVAR_LENxEMBED_DIM
         # ---------------------
         #                      \ 64x1xEMBED_DIMS
-        embeddings = torch.cat((features.unsqueeze(0), embeddings), dim=0)  # 64x(VAR_LEN+1)xEMBED_DIMS
+        embeddings = torch.cat((features.unsqueeze(0), embeddings), dim=1)  # 64x(VAR_LEN+1)xEMBED_DIMS
         return self.model(embeddings)
 
         
