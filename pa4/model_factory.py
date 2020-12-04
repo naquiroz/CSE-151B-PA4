@@ -53,7 +53,7 @@ class ExperimentModel(nn.Module):
         embeddings = self.embedding(captions)  # 64xVAR_LENxEMBED_DIM
         # ---------------------
         #                      \ 64x1xEMBED_DIMS
-        embeddings = torch.cat((encoded.unsqueeze(1), embeddings), dim=1)  # 64x(VAR_LEN+1)xEMBED_DIMS
+        embeddings = torch.cat((encoded.unsqueeze(1), embeddings[:, :-1]), dim=1)  # 64x(VAR_LEN+1)xEMBED_DIMS
         outputs = self.decoder(embeddings)  # LSTM takes in 1. current feature 2. hidden + cell state
         return outputs
 
