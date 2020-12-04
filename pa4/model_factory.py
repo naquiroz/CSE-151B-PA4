@@ -58,12 +58,17 @@ class ExperimentModel(nn.Module):
         return outputs
 
     # WIP: Stochastic
-    def apply_generation(self, outputs, deterministic=True):
+    def apply_generation(self, outputs, deterministic: bool =True, temperature: float = 1):
+        print("outputs size: ", outputs.size() )
         if deterministic:
             return outputs.argmax(1)
         else:
             # Stochastic
-            raise NotImplementedError()
+            temp_outputs = torch.div(outputs, temperature)
+            temp_outputs = nn.Softmax(temp_outputs)
+            picked_idx = torch.multinomial(input=temp_outputs, num_samples=1)
+            return outputs[picked_idx]
+            # raise NotImplementedError()
     
     
     def generate_captions(self, images):
