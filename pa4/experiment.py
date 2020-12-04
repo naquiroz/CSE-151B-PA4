@@ -126,10 +126,10 @@ class Experiment(object):
             self.__optimizer.zero_grad()
 
             with torch.set_grad_enabled(True):
-
-                output, (h0, c0) = self.__model(images, captions)
+                
+                output, state = self.__model(images, captions)
                 print("train output shape: ", output.shape )
-                print("captions shape: ", captions.shape)
+                print("state shape: ", state.shape)
 
                 loss = self.__criterion(
                     output.reshape(-1, output.shape[2]), captions.reshape(-1)
