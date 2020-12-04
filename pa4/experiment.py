@@ -121,7 +121,8 @@ class Experiment(object):
 
             images = images.to(device)
             captions = captions.to(device)
-            print("captions type: ", type(captions))
+            print("img size: ", len(images))
+            print("captions size: ", len(captions))
 
             self.__optimizer.zero_grad()
 
