@@ -127,7 +127,7 @@ class Experiment(object):
 
             with torch.set_grad_enabled(True):
 
-                output = self.__model(images, captions)
+                output, (h0, c0) = self.__model(images, captions)
                 print("train output size: ", len(output) )
                 print("train output 0: ", output[0])
                 print("train output 1: ", output[1])
