@@ -128,9 +128,8 @@ class Experiment(object):
             with torch.set_grad_enabled(True):
 
                 output, (h0, c0) = self.__model(images, captions)
-                print("train output size: ", len(output) )
-                print("train output 0: ", output[0])
-                print("train output 1: ", output[1])
+                print("train output shape: ", output.shape )
+                print("captions shape: ", captions.shape)
 
                 loss = self.__criterion(
                     output.reshape(-1, output.shape[2]), captions.reshape(-1)
