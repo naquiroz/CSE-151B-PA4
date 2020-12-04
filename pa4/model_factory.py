@@ -74,7 +74,7 @@ class ExperimentModel(nn.Module):
     def generate_captions(self, images):
         captions = []
         max_length = 300  # Where can we get this number. ==> embedding size = 300
-        input_ = self.encoder(image).unsqueeze(0)
+        input_ = self.encoder(images).unsqueeze(0)
         states = None
         for _ in range(max_length):
             hidden_outputs, states = self.decoder.model(input_, states)

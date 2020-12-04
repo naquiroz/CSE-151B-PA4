@@ -72,19 +72,19 @@ class Experiment(object):
 
         if os.path.exists(self.__experiment_dir):
             print("Loading")
-#             self.__training_losses = read_file_in_dir(
-#                 self.__experiment_dir, 'training_losses.txt'
-#             )
-#             self.__val_losses = read_file_in_dir(
-#                 self.__experiment_dir, 'val_losses.txt'
-#             )
-#             self.__current_epoch = len(self.__training_losses)
+            self.__training_losses = read_file_in_dir(
+                self.__experiment_dir, 'training_losses.txt'
+            )
+            self.__val_losses = read_file_in_dir(
+                self.__experiment_dir, 'val_losses.txt'
+            )
+            self.__current_epoch = len(self.__training_losses)
 
-#             state_dict = torch.load(
-#                 os.path.join(self.__experiment_dir, 'latest_model.pt')
-#             )
-#             self.__model.load_state_dict(state_dict['model'])
-#             self.__optimizer.load_state_dict(state_dict['optimizer'])
+            state_dict = torch.load(
+                os.path.join(self.__experiment_dir, 'latest_model.pt')
+            )
+            self.__model.load_state_dict(state_dict['model'])
+            self.__optimizer.load_state_dict(state_dict['optimizer'])
 
         else:
             os.makedirs(self.__experiment_dir)
@@ -129,7 +129,8 @@ class Experiment(object):
 
                 output = self.__model(images, captions)
                 print("train output size: ", len(output) )
-                print("train output: ", output)
+                print("train output 0: ", output[0])
+                print("train output 1: ", output[1])
 
                 loss = self.__criterion(
                     output.reshape(-1, output.shape[2]), captions.reshape(-1)
@@ -181,35 +182,29 @@ class Experiment(object):
 
         device = self.device
         test_loss = 0
-        bleu1 = 0
-        bleu4 = 0
+        bleu1_score = 0
+        bleu4_score = 0
 
         with torch.no_grad():
-            for i, (images, captions, img_ids) in enumerate(self.__test_loader):
+            for i, (images, captions, _) in enumerate(self.__test_loader):
+                size = len(images)
                 images = images.to(device)
                 captions = captions.to(device)
-                start = ...
-                # x = self.encoderCNN(image).unsqueeze(0)
-                # states = None
-                # for _ in range(max_length):
-                # hiddens, states = self.decoderRNN.lstm(x, states)
-                # output = self.decoderRNN.linear(hiddens.squeeze(0))
-                # predicted = output.argmax(1)
-                # result_caption.append(predicted.item())
-                # x = self.decoderRNN.embed(predicted).unsqueeze(0)
-                # if vocabulary.itos[predicted.item()] == "<EOS>":
-                # break
-
-        return [vocabulary.itos[idx] for idx in result_caption]
+                prediction = self.__model.generate_captions(images).to(device)
+                test_loss += self.__criterion(
+                    prediction.reshape(-1, prediction.shape[2]), captions.reshape(-1)
+                ) / size
+                bleu1_score += bleu1(captions, prediction) / size
+                bleu4_score += bleu4(captions, prediction) / size
 
         result_str = (
             "Test Performance: Loss: {}, Perplexity: {}, Bleu1: {}, Bleu4: {}".format(
-                test_loss, bleu1, bleu4
+                test_loss, bleu1_score, bleu4_score
             )
         )
         self.__log(result_str)
 
-        return test_loss, bleu1, bleu4
+        return test_loss, bleu1_score, bleu4_score
 
     def __save_model(self):
         root_model_path = os.path.join(self.__experiment_dir, 'latest_model.pt')
