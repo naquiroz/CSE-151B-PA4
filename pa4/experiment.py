@@ -113,9 +113,10 @@ class Experiment(object):
         self.__model.train()
 
         device = self.device
-        training_loss = 0
-
+        vocab_size = len(self.__vocab)
         size = len(self.__train_loader)
+
+        training_loss = 0
 
         for i, (images, captions, _) in enumerate(self.__train_loader):
 
@@ -126,7 +127,8 @@ class Experiment(object):
 
             with torch.set_grad_enabled(True):
                 output = self.__model(images, captions)
-                loss = self.__criterion(output, captions)
+
+                loss = self.__criterion(output.view(-1, vocab_size), captions.view(-1))
 
                 training_loss += loss / size
 
