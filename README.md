@@ -1,6 +1,8 @@
 # Image Captioning
 
-* TODO: Details specific to the student's implementation to be added by the student 
+This project's layout uses standard Python packages. As such, to invoke the `main`, run `python -m pa4.main`, with optional configuration.
+
+In addition, configuration files lay in the `experiments` directory.
 
 ## Usage
 

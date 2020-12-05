@@ -174,22 +174,22 @@ class Experiment(object):
     #  bleu scores using the best model. Use utility functions provided to you in caption_utils.
     #  Note than you'll need image_ids and COCO object in this case to fetch all captions to generate bleu scores.
     def test(self):
-        self.__model.load_state_dict(self.__best_model_state)
-        self.__model.eval()
+        self._Experiment__model.load_state_dict(self._Experiment__best_model_state)
+        self._Experiment__model.eval()
 
         device = self.device
         test_loss = 0
         bleu1_score = 0
         bleu4_score = 0
-        vocab_size = len(self.__vocab)
+        vocab_size = len(self._Experiment__vocab)
 
         with torch.no_grad():
-            for i, (images, captions, img_ids, _) in enumerate(self.__test_loader):
+            for i, (images, captions, img_ids, _) in enumerate(self._Experiment__test_loader):
                 size = len(images)
                 images = images.to(device)
                 captions = captions.to(device)
 
-                predictions = self.__model.forward_generate(images).to(device)
+                predictions = self._Experiment__model.forward_generate(images).to(device)
                 predictions_pad = max(captions.size(1) - predictions.size(1), 0)
                 captions_pad = max(predictions.size(1) - captions.size(1), 0)
 
@@ -197,7 +197,7 @@ class Experiment(object):
                 captions_padded = F.pad(captions, (0, captions_pad))
 
                 predictions_one_hot = one_hot(predictions_padded, vocab_size).float()
-                test_loss += self.__criterion(
+                test_loss += self._Experiment__criterion(
                     predictions_one_hot.view(-1, vocab_size),
                     captions_padded.view(-1),
                 ).item() / size
@@ -206,10 +206,10 @@ class Experiment(object):
 
         result_str = (
             "Test Performance: Loss: {}, Perplexity: {}, Bleu1: {}, Bleu4: {}".format(
-                test_loss, torch.exp(test_loss), bleu1_score, bleu4_score
+                test_loss, torch.exp(torch.Tensor([test_loss])).item(), bleu1_score, bleu4_score
             )
         )
-        self.__log(result_str)
+        self._Experiment__log(result_str)
 
         return test_loss, bleu1_score, bleu4_score
 
