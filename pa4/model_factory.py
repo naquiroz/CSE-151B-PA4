@@ -111,9 +111,19 @@ class ExperimentModelVariant2(ExperimentModel):
         return outputs
 
     def forward_generate(self, images):
+        LATENT_DIMS = images.size(-1)
         latent = self.encoder(images).unsqueeze(1)  # Shape: BATCHx1xLATENT_DIMS
         pad = self.embedding(torch.zeros(64, 1))  # Shape: BATCHx1xEMBED_DIMS
         input_ = torch.cat((latent, pad))
+
+        for i in range(self.max_length):
+            output, state = self.decoder(input_, state, return_state=True)
+            token = self.apply_generation(output)
+            captions[:, i] = token
+            embedded = self.embedding(token).unsqueeze(1)
+            input_[LATENT_DIMS:] = embedded
+
+        return captions
 
 
 '''
