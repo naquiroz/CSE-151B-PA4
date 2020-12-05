@@ -9,7 +9,7 @@ from collections import Counter
 import nltk
 from pycocotools.coco import COCO
 
-# from .utils import tenumerate
+from .utils import tenumerate
 
 # A simple wrapper class for Vocabulary. No changes are required in this file
 class Vocabulary(object):
@@ -60,7 +60,7 @@ def build_vocab(json, threshold):
         tokens = nltk.tokenize.word_tokenize(caption.lower())
         counter.update(tokens)
 
-        if (i + 1) % 1000 == 0:
+        if tenumerate == enumerate and (i + 1) % 1000 == 0:
             print("[{}/{}] Tokenizing Captions.".format(i + 1, len(ids)))
 
     # If the word frequency is less than 'threshold', then the word is discarded.

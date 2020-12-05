@@ -37,6 +37,8 @@ class Decoder(nn.Module):
 
     def forward(self, features):
         output, _ = self.model(features)
+        print("output shape:", output.shape)
+        print("linear shape:", self.linear(output).shape)
         return self.linear(output)
 
         

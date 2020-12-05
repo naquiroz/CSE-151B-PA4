@@ -125,7 +125,6 @@ class Experiment(object):
             self.__optimizer.zero_grad()
 
             with torch.set_grad_enabled(True):
-                
                 output = self.__model(images, captions)
                 loss = self.__criterion(output, captions)
 
