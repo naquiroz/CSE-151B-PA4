@@ -109,12 +109,12 @@ class Experiment(object):
             self.__log_epoch_stats(start_time)
             self.__save_model()
 
-    def __one_hot_to_number(self, word):
+    def __one_hot_to_idx(self, word):
         return self.__vocab(word.argmax().item())
 
     def __debug(self, captions):
         first_five = captions[:5]
-        mapped = [[self.__vocab(self.__one_hot_to_number(word)) for word in caption] for caption in first_five]
+        mapped = [[self.__vocab.idx2word[self.__one_hot_to_idx(word)] for word in caption] for caption in first_five]
         
     def __forward(self, train: bool = False):
         if train:
