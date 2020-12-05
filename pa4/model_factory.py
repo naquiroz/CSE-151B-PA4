@@ -40,7 +40,7 @@ class Decoder(nn.Module):
         if lengths is not None:
             packed_features = pack_padded_sequence(features, lengths, batch_first=True)
             packed_output, state = self.model(packed_features, state)
-            output = pad_packed_sequence(packed_output)
+            output, _ = pad_packed_sequence(packed_output, batch_first)
         else:
             output, state = self.model(features, state)
 
