@@ -189,7 +189,7 @@ class Experiment(object):
                 captions = captions.to(device)
 
                 prediction = self.__model.forward_generate(images).to(device)
-                prediction = one_hot(prediction, vocab_size)
+                prediction = one_hot(prediction, vocab_size).float()
                 test_loss += self.__criterion(
                     prediction.view(-1, vocab_size),
                     captions.view(-1),
