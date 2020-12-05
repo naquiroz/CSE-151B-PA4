@@ -109,7 +109,12 @@ class Experiment(object):
             self.__log_epoch_stats(start_time)
             self.__save_model()
 
+    def __one_hot_to_number(self, word):
 
+    def __debug(self, captions):
+        first_five = captions[:5]
+        mapped = [[self.__vocab(word) for word in caption] for caption in first_five]
+        
     def __forward(self, train: bool = False):
         if train:
             self.__model.train()
@@ -137,7 +142,7 @@ class Experiment(object):
 
                 loss = self.__criterion(output.view(-1, vocab_size), captions.view(-1))
 
-                total_loss += loss / size
+                total_loss += loss.item() / size
         
                 if train:
                     loss.backward()
