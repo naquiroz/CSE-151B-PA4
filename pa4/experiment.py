@@ -131,7 +131,7 @@ class Experiment(object):
                 print("caption output shape: ", captions.shape )
                 output = self.__model.apply_generation(output)
                 loss = self.__criterion(
-                    output.reshape(-1, output.shape[2]), captions.reshape(-1)
+                    output, captions
                 )
 
                 training_loss += loss / size
