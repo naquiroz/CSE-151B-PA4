@@ -72,19 +72,19 @@ class ExperimentModel(nn.Module):
         return outputs
     
     def forward_generate(self, images):
-        latent = self.encoder(images)
+        input_ = self.encoder(images).unsqueeze(1)
         state = None
         batch_size = images.shape[0]
         captions = torch.LongTensor(batch_size, self.max_length)
     
         for i in range(self.max_length):
-            output, state = self.decoder(latent, state)
+            output, state = self.decoder(input_, state)
             token = self.apply_generation(output)
             captions[:, i] = token
+            input_ = self.embedding(token).unsqueeze(1)
 
         return captions
 
-    # WIP: Stochastic
     def apply_generation(self, outputs):
         # outputs: 64xVOCAB_SIZE
         if self.deterministic:
@@ -97,13 +97,20 @@ class ExperimentModel(nn.Module):
 
 class ExperimentModelVariant2(ExperimentModel):
     def forward(self, images, captions):
-        encoded = self.encoder(images).unsqueeze(1)  # Shape: BATCHx1xEMBED_DIMS
+        seq_len = 
+        latent = self.encoder(images).unsqueeze(1)  # Shape: BATCHx1xLATENT_DIMS
+        latent_stacked = latent.expand(-1, seq_len, -1)  # Shape: BATCHxSEQ_LENxLATENT_DIMS
+
         captions = torch.cat(torch.zeros(1), captions)  # Shape: BATCHx(SEQ_LEN+1)
         embeddings = self.embedding(captions)  # Shape: BATCHx(SEQ_LEN+1)xEMBED_DIMS
-        encoded_stack = encoded.expand(-1, seq_len, -1)  # Shape: BATCHxSEQ_LENxEMBED_DIMS
-        features = torch.cat((encoded_stack, embeddings[:, :-1]), dim=2)
 
-        pass
+        features = torch.cat((latent_stacked, embeddings[:, :-1]), dim=2)  # Shape: BATCHxSEQ_LENx(LATENT_DIMS+EMBED_DIMS)
+
+        outputs = self.decoder(features)
+        return outputs
+
+    def forward_generate(self, images):
+        latent = self.en
 
 '''
 1. Run encoder
