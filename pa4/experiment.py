@@ -126,7 +126,7 @@ class Experiment(object):
 
             with torch.set_grad_enabled(True):
                 
-                output, (h, c) = self.__model(images, captions)
+                output = self.__model(images, captions)
                 loss = self.__criterion(output, captions)
 
                 training_loss += loss / size

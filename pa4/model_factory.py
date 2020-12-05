@@ -36,7 +36,8 @@ class Decoder(nn.Module):
         self.linear = nn.Linear(hidden_size, output_size)
 
     def forward(self, features):
-        return self.linear(self.model(features))
+        output, _ = self.model(features)
+        return self.linear(output)
 
         
 # MODEL
