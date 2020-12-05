@@ -206,7 +206,7 @@ class Experiment(object):
 
         result_str = (
             "Test Performance: Loss: {}, Perplexity: {}, Bleu1: {}, Bleu4: {}".format(
-                test_loss, bleu1_score, bleu4_score
+                test_loss, torch.exp(test_loss), bleu1_score, bleu4_score
             )
         )
         self.__log(result_str)
