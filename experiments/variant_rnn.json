@@ -24,7 +24,7 @@
   },
   "generation": {
     "max_length": 20,
-    "deterministic": false,
+    "deterministic": true,
     "temperature": 0.1
   }
 }

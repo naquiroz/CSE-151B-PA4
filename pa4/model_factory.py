@@ -100,7 +100,7 @@ class ExperimentModelVariant2(ExperimentModel):
         encoded = self.encoder(images)
         captions = torch.cat(torch.zeros(1), captions)
         embeddings = self.embedding(captions)
-        features = torch.cat((encoded.unsqueeze(1), embeddings[:]))
+        stacked = torch.cat(encoded, )
         pass
 
 '''
