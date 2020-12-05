@@ -131,7 +131,7 @@ class Experiment(object):
 
         total_loss = 0
 
-        for i, (images, captions, _) in enumerate(loader):
+        for i, (images, captions, _, lengths) in enumerate(loader):
 
             images = images.to(device)
             captions = captions.to(device)
@@ -140,7 +140,7 @@ class Experiment(object):
                 self.__optimizer.zero_grad()
 
             with torch.set_grad_enabled(train):
-                output = self.__model(images, captions)
+                output = self.__model(images, captions, lengths)
                 loss = self.__criterion(output.view(-1, vocab_size), captions.view(-1))
 
                 total_loss += loss.item() / size
@@ -183,10 +183,11 @@ class Experiment(object):
         vocab_size = len(self.__vocab)
 
         with torch.no_grad():
-            for i, (images, captions, img_ids) in enumerate(self.__test_loader):
+            for i, (images, captions, img_ids, _) in enumerate(self.__test_loader):
                 size = len(images)
                 images = images.to(device)
                 captions = captions.to(device)
+
                 prediction = self.__model.forward_generate(images).to(device)
                 test_loss += self.__criterion(
                     prediction.view(-1, vocab_size),
