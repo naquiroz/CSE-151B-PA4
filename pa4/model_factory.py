@@ -98,7 +98,7 @@ class ExperimentModel(nn.Module):
 class ExperimentModelVariant2(ExperimentModel):
     def forward(self, images, captions):
         encoded = self.encoder(images)
-        captions = torch.cat([0], captions)
+        captions = torch.cat(torch.zeros(1), captions)
         embeddings = self.embedding(captions)
         # features = torch.
         pass
