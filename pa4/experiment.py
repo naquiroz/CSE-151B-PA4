@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.nn.funcional import one_hot
+from torch.nn.functional import one_hot
 from .caption_utils import *
 from .constants import ROOT_STATS_DIR
 from .dataset_factory import get_datasets
