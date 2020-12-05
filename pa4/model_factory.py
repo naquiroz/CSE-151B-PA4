@@ -100,7 +100,7 @@ class ExperimentModelVariant2(ExperimentModel):
         encoded = self.encoder(images)
         captions = torch.cat(torch.zeros(1), captions)
         embeddings = self.embedding(captions)
-        # features = torch.
+        features = torch.cat((encoded.unsqueeze(1), embeddings[:]))
         pass
 
 '''
@@ -177,7 +177,7 @@ def get_model(config_data, vocab):
     else:
         raise NotImplementedError(f'Unknown model type {model_type}')
 
-    model = ExperimentModel(encoder, decoder, embedding, vocab, max_length)
+    model = ExperimentModel(encoder, decoder, embedding, vocab, max_length, deterministic, temperature)
 
     return model
 
