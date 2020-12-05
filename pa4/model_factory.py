@@ -30,23 +30,24 @@ class Encoder(nn.Module):
     
 
 class Decoder(nn.Module):
-    def __init__(self, model: nn.Module, embedding: nn.Module):
+    def __init__(self, model: nn.Module, hidden_size: int, output_size: int):
         super().__init__()
         self.model = model
-        self.embedding = embedding
+        self.linear = nn.Linear(hidden_size, output_size)
 
     def forward(self, features):
-        return self.model(features)
+        return self.linear(self.model(features))
 
         
 # MODEL
 class ExperimentModel(nn.Module):
     def __init__(self, encoder: Encoder, decoder: Decoder, embedding: nn.Embedding, vocab: Vocabulary):
         super().__init__()
-        self.encoder = encoder
-        self.decoder = decoder
-        self.embedding = embedding
         self.vocab = vocab
+
+        self.encoder = encoder
+        self.embedding = embedding
+        self.decoder = decoder
 
     def forward(self, images, captions):
         encoded = self.encoder(images)
@@ -142,7 +143,9 @@ def get_model(config_data, vocab):
                 dropout=dropout,
                 nonlinearity=nonlinearity,
             ),
-            embedding
+            embedding,
+            hidden_size=hidden_size,
+            output_size=len(vocab)
         )
     else:
         raise NotImplementedError(f'Unknown model type {model_type}')
