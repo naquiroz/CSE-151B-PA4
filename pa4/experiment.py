@@ -173,7 +173,7 @@ class Experiment(object):
     #  bleu scores using the best model. Use utility functions provided to you in caption_utils.
     #  Note than you'll need image_ids and COCO object in this case to fetch all captions to generate bleu scores.
     def test(self):
-        self.__model = self.__model.load_state_dict(self.__best_model_state)
+        self.__model.load_state_dict(self.__best_model_state)
         self.__model.eval()
 
         device = self.device

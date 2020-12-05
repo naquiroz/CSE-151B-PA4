@@ -97,10 +97,12 @@ class ExperimentModel(nn.Module):
 
 class ExperimentModelVariant2(ExperimentModel):
     def forward(self, images, captions):
-        encoded = self.encoder(images).unsqueeze(1)  # Shape: BATCHxDIM
-        captions = torch.cat(torch.zeros(1), captions)
-        embeddings = self.embedding(captions)
-        stacked = torch.cat(encoded, )
+        encoded = self.encoder(images).unsqueeze(1)  # Shape: BATCHx1xEMBED_DIMS
+        captions = torch.cat(torch.zeros(1), captions)  # Shape: BATCHx(SEQ_LEN+1)
+        embeddings = self.embedding(captions)  # Shape: BATCHx(SEQ_LEN+1)xEMBED_DIMS
+        encoded_stack = encoded.expand(-1, seq_len, -1)  # Shape: BATCHxSEQ_LENxEMBED_DIMS
+        features = torch.cat((encoded_stack, embeddings[:, :-1]), dim=2)
+
         pass
 
 '''
