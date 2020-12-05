@@ -36,7 +36,7 @@ class Decoder(nn.Module):
         self.model = model
         self.linear = nn.Linear(hidden_size, output_size)
 
-    def forward(self, features, lengths=None, state=None, return_state=False):
+    def forward(self, features, state=None, lengths=None, return_state=False):
         if lengths is not None:
             packed_features = pack_padded_sequence(features, lengths, batch_first=True)
             packed_output, state = self.model(packed_features, state)
@@ -75,7 +75,7 @@ class ExperimentModel(nn.Module):
         #                      \ 64x1xEMBED_DIMS
         features = torch.cat((encoded.unsqueeze(1), embeddings[:, :-1]), dim=1)  # 64x(VAR_LEN+1)xEMBED_DIMS
 
-        outputs = self.decoder(features, lengths)  # LSTM takes in 1. current feature 2. hidden + cell state
+        outputs = self.decoder(features, lengths=lengths)  # LSTM takes in 1. current feature 2. hidden + cell state
         return outputs
     
     def forward_generate(self, images):
@@ -85,7 +85,7 @@ class ExperimentModel(nn.Module):
         captions = torch.LongTensor(batch_size, self.max_length)
     
         for i in range(self.max_length):
-            output, state = self.decoder(input_, state, return_state=True)
+            output, state = self.decoder(input_, state=state, return_state=True)
             token = self.apply_generation(output.squeeze(1))
             captions[:, i] = token
             input_ = self.embedding(token).unsqueeze(1)
@@ -124,7 +124,7 @@ class ExperimentModelVariant2(ExperimentModel):
         input_ = torch.cat((latent, pad))
 
         for i in range(self.max_length):
-            output, state = self.decoder(input_, state, return_state=True)
+            output, state = self.decoder(input_, state=state, return_state=True)
             token = self.apply_generation(output.squeeze(1))
             captions[:, i] = token
             embedded = self.embedding(token).unsqueeze(1)
