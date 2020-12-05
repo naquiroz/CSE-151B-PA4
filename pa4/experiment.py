@@ -110,6 +110,7 @@ class Experiment(object):
             self.__save_model()
 
     def __one_hot_to_number(self, word):
+        print(word.argmax().item(), type(word.argmax().item()))
         return self.__vocab(word.argmax().item())
 
     def __debug(self, captions):
