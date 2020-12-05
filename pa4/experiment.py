@@ -113,9 +113,9 @@ class Experiment(object):
         return word.argmax().item()
 
     def __debug(self, captions):
-        first_five = captions[:5]
-        mapped = [ [self.__vocab.idx2word[self.__one_hot_to_idx(word)] for word in caption] for caption in first_five]
-        print(mapped)
+        caption = captions[0]
+        mapped = [self.__vocab.idx2word[self.__one_hot_to_idx(word)] for word in caption]
+        print(' '.join(mapped))
         
     def __forward(self, train: bool = False):
         if train:
