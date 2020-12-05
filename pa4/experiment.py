@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.nn.functional import one_hot
 from .caption_utils import *
 from .constants import ROOT_STATS_DIR
@@ -188,14 +189,20 @@ class Experiment(object):
                 images = images.to(device)
                 captions = captions.to(device)
 
-                prediction = self.__model.forward_generate(images).to(device)
-                prediction = one_hot(prediction, vocab_size).float()
+                predictions = self.__model.forward_generate(images).to(device)
+                predictions_pad = max(captions.size(1) - predictions.size(1), 0)
+                captions_pad = max(predictions.size(1) - captions.size(1), 0)
+
+                predictions_padded = F.pad(predictions, (0, predictions_pad))
+                captions_padded = F.pad(captions, (0, captions_pad))
+
+                predictions_one_hot = one_hot(predictions_padded, vocab_size).float()
                 test_loss += self.__criterion(
-                    prediction.view(-1, vocab_size),
+                    predictions_one_hot.view(-1, vocab_size),
                     captions.view(-1),
                 ).item() / size
-                bleu1_score += bleu1(captions, prediction) / size
-                bleu4_score += bleu4(captions, prediction) / size
+                bleu1_score += bleu1(captions, predictions_one_hot) / size
+                bleu4_score += bleu4(captions, predictions_one_hot) / size
 
         result_str = (
             "Test Performance: Loss: {}, Perplexity: {}, Bleu1: {}, Bleu4: {}".format(
