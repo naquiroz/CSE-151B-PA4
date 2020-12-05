@@ -35,20 +35,27 @@ class Decoder(nn.Module):
         self.model = model
         self.linear = nn.Linear(hidden_size, output_size)
 
-    def forward(self, features):
-        output, _ = self.model(features)
-        return self.linear(output)
+    def forward(self, features, state=None, return_state=False):
+
+        output, state = self.model(features, state)
+        raw = self.linear(output)
+
+        if return_state:
+            return raw, state
+        return raw
+
 
         
 # MODEL
 class ExperimentModel(nn.Module):
-    def __init__(self, encoder: Encoder, decoder: Decoder, embedding: nn.Embedding, vocab: Vocabulary):
+    def __init__(self, encoder: Encoder, decoder: Decoder, embedding: nn.Embedding, vocab: Vocabulary, max_length: int):
         super().__init__()
         self.vocab = vocab
 
         self.encoder = encoder
         self.embedding = embedding
         self.decoder = decoder
+        self.max_length = max_length
 
     def forward(self, images, captions):
         encoded = self.encoder(images)
@@ -58,33 +65,39 @@ class ExperimentModel(nn.Module):
         embeddings = torch.cat((encoded.unsqueeze(1), embeddings[:, :-1]), dim=1)  # 64x(VAR_LEN+1)xEMBED_DIMS
         outputs = self.decoder(embeddings)  # LSTM takes in 1. current feature 2. hidden + cell state
         return outputs
+    
+    def forward_generate(self, images, deterministic: bool = True, temperature: float = 1):
+        latent = self.encoder(images)
+        state = None
+        batch_size = images.shape[0]
+        captions = torch.LongTensor(batch_size, self.max_length)
+    
+        for i in range(self.max_length):
+            output, state = self.decoder(latent, state)
+            token = self.apply_generation(output)
+            captions[:, i] = token
+
+        return captions
+
 
     # WIP: Stochastic
-    def apply_generation(self, outputs, deterministic: bool =True, temperature: float = 1):
+    def apply_generation(self, outputs, deterministic: bool = True, temperature: float = 1):
+        # outputs: 64xVOCAB_SIZE
         if deterministic:
             return outputs.argmax(1)
-        else:
-            # Stochastic
-            temp_outputs = torch.div(outputs, temperature)
-            temp_outputs = nn.Softmax(temp_outputs)
-            picked_idx = torch.multinomial(input=temp_outputs, num_samples=1)
-            return outputs[picked_idx]
-            # raise NotImplementedError()
-    
-    
-    def generate_captions(self, images):
-        captions = []
-        max_length = 300  # Where can we get this number. ==> embedding size = 300
-        input_ = self.encoder(images).unsqueeze(0)
-        states = None
-        for _ in range(max_length):
-            hidden_outputs, states = self.decoder.model(input_, states)
-            prediction = self.apply_generation(hidden_output)
-            captions.append(prediction)
-            input_ = self.decoder.embedding(prediction).unsqueeze(0)
-        return torch.Tensor(captions)
+
+        # Stochastic
+        temp_outputs = nn.functional.softmax(outputs / temperature)
+        picked_idx = torch.multinomial(temp_outputs, num_samples=1)
+        return outputs[picked_idx]
 
 
+'''
+1. Run encoder
+2. Pass encoder output into LSTM with empty state
+3. Get prediction from LSTM state, and store prediction
+4. Pass prediction (re-embedded) into LSTM
+'''
 
 
 # def get_model(config_data, vocab):
@@ -121,6 +134,7 @@ def get_model(config_data, vocab):
     model_type = config_data['model']['model_type']
     dropout = config_data['model'].get('dropout', 0)
     nonlinearity = config_data['model'].get('nonlinearity') or 'tanh'
+    max_length = config_data['generation']['max_length']
 
     embedding = get_embedding(len(vocab), embedding_size)
     encoder = get_encoder(output_size=embedding_size, fine_tune=False)
@@ -150,7 +164,7 @@ def get_model(config_data, vocab):
     else:
         raise NotImplementedError(f'Unknown model type {model_type}')
 
-    model = ExperimentModel(encoder, decoder, embedding, vocab)
+    model = ExperimentModel(encoder, decoder, embedding, vocab, max_length)
 
     return model
 

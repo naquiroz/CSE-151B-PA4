@@ -180,16 +180,17 @@ class Experiment(object):
         test_loss = 0
         bleu1_score = 0
         bleu4_score = 0
+        vocab_size = len(self.__vocab)
 
         with torch.no_grad():
             for i, (images, captions, img_ids) in enumerate(self.__test_loader):
                 size = len(images)
                 images = images.to(device)
                 captions = captions.to(device)
-                prediction = self.__model.generate_captions(images).to(device)
+                prediction = self.__model.forward_generate(images).to(device)
                 test_loss += self.__criterion(
-                    prediction.reshape(-1, prediction.shape[2]), captions.reshape(-1)
-                ) / size
+                    prediction.view(-1, vocab_size), captions.view(-1))
+                ).item() / size
                 bleu1_score += bleu1(captions, prediction) / size
                 bleu4_score += bleu4(captions, prediction) / size
 
