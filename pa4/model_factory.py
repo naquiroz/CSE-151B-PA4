@@ -109,7 +109,7 @@ class ExperimentModelVariant2(ExperimentModel):
         latent = self.encoder(images).unsqueeze(1)  # Shape: BATCHx1xLATENT_DIMS
         latent_stacked = latent.expand(-1, seq_len, -1)  # Shape: BATCHxSEQ_LENxLATENT_DIMS
 
-        zeros= torch.zeros(1).to('cuda').float()
+        zeros= torch.zeros(images.shape[0], 1).to('cuda').float()
         captions = captions.to('cuda').float()
         captions = torch.cat((zeros, captions))  # Shape: BATCHx(SEQ_LEN+1)
         embeddings = self.embedding(captions)  # Shape: BATCHx(SEQ_LEN+1)xEMBED_DIMS
