@@ -48,7 +48,7 @@ class Decoder(nn.Module):
         
 # MODEL
 class ExperimentModel(nn.Module):
-    def __init__(self, encoder: Encoder, decoder: Decoder, embedding: nn.Embedding, vocab: Vocabulary, max_length: int):
+    def __init__(self, encoder: Encoder, decoder: Decoder, embedding: nn.Embedding, vocab: Vocabulary, max_length: int, deterministic: bool, temperature:float):
         super().__init__()
         self.vocab = vocab
 
@@ -56,17 +56,22 @@ class ExperimentModel(nn.Module):
         self.embedding = embedding
         self.decoder = decoder
         self.max_length = max_length
+        self.deterministic = deterministic
+        self.temperature = temperature
+
+        if not self.deterministic and self.temperature is None:
+            raise EnviromentError("Non deterministic missing temperature on model initialization")
 
     def forward(self, images, captions):
         encoded = self.encoder(images)
         embeddings = self.embedding(captions)  # 64xVAR_LENxEMBED_DIM
         # ---------------------
         #                      \ 64x1xEMBED_DIMS
-        embeddings = torch.cat((encoded.unsqueeze(1), embeddings[:, :-1]), dim=1)  # 64x(VAR_LEN+1)xEMBED_DIMS
-        outputs = self.decoder(embeddings)  # LSTM takes in 1. current feature 2. hidden + cell state
+        features = torch.cat((encoded.unsqueeze(1), embeddings[:, :-1]), dim=1)  # 64x(VAR_LEN+1)xEMBED_DIMS
+        outputs = self.decoder(features)  # LSTM takes in 1. current feature 2. hidden + cell state
         return outputs
     
-    def forward_generate(self, images, deterministic: bool = True, temperature: float = 1):
+    def forward_generate(self, images):
         latent = self.encoder(images)
         state = None
         batch_size = images.shape[0]
@@ -79,18 +84,23 @@ class ExperimentModel(nn.Module):
 
         return captions
 
-
     # WIP: Stochastic
-    def apply_generation(self, outputs, deterministic: bool = True, temperature: float = 1):
+    def apply_generation(self, outputs):
         # outputs: 64xVOCAB_SIZE
-        if deterministic:
+        if self.deterministic:
             return outputs.argmax(1)
 
         # Stochastic
-        temp_outputs = nn.functional.softmax(outputs / temperature)
+        temp_outputs = nn.functional.softmax(outputs / self.temperature)
         picked_idx = torch.multinomial(temp_outputs, num_samples=1)
         return outputs[picked_idx]
 
+class ExperimentModelVariant2(ExperimentModel):
+    def forward(self, images, captions):
+        encoded = self.encoder(images)
+        embeddings = self.embedding(captions)
+        features = torch.
+        pass
 
 '''
 1. Run encoder
@@ -135,6 +145,8 @@ def get_model(config_data, vocab):
     dropout = config_data['model'].get('dropout', 0)
     nonlinearity = config_data['model'].get('nonlinearity') or 'tanh'
     max_length = config_data['generation']['max_length']
+    deterministic = config_data['generation']['deterministic']
+    temperature = config_data['generation'].get('temperature')
 
     embedding = get_embedding(len(vocab), embedding_size)
     encoder = get_encoder(output_size=embedding_size, fine_tune=False)
