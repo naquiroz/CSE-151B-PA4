@@ -181,7 +181,7 @@ def get_model(config_data, vocab):
 
     embedding = get_embedding(len(vocab), embedding_size)
     encoder = get_encoder(output_size=embedding_size, fine_tune=False)
-    if model_type == 'baseline':
+    if model_type in ['baseline', 'arch_2']:
         decoder = Decoder(
             get_lstm(
                 input_size=embedding_size,
@@ -207,7 +207,9 @@ def get_model(config_data, vocab):
     else:
         raise NotImplementedError(f'Unknown model type {model_type}')
 
-    model = ExperimentModel(encoder, decoder, embedding, vocab, max_length, deterministic, temperature)
+    caption_model = ExperimentModel if model_type != "arch_2" else ExperimentModelVariant2
+
+    model = caption_model(encoder, decoder, embedding, vocab, max_length, deterministic, temperature)
 
     return model
 
