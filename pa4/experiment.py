@@ -141,9 +141,6 @@ class Experiment(object):
 
             with torch.set_grad_enabled(train):
                 output = self.__model(images, captions)
-                ####### DEBUGGING
-                self.__debug(output)
-                ####### DEBUGGING
                 loss = self.__criterion(output.view(-1, vocab_size), captions.view(-1))
 
                 total_loss += loss.item() / size
