@@ -97,7 +97,7 @@ class ExperimentModel(nn.Module):
 
 class ExperimentModelVariant2(ExperimentModel):
     def forward(self, images, captions):
-        seq_len = 
+        seq_len = ...
         latent = self.encoder(images).unsqueeze(1)  # Shape: BATCHx1xLATENT_DIMS
         latent_stacked = latent.expand(-1, seq_len, -1)  # Shape: BATCHxSEQ_LENxLATENT_DIMS
 
