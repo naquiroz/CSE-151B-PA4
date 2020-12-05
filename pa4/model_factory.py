@@ -132,7 +132,6 @@ def get_model(config_data, vocab):
                 num_layers=1,
                 dropout=dropout,
             ),
-            embedding,
             hidden_size=hidden_size,
             output_size=len(vocab),
         )
@@ -145,7 +144,6 @@ def get_model(config_data, vocab):
                 dropout=dropout,
                 nonlinearity=nonlinearity,
             ),
-            embedding,
             hidden_size=hidden_size,
             output_size=len(vocab),
         )
