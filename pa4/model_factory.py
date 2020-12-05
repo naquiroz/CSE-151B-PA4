@@ -37,8 +37,6 @@ class Decoder(nn.Module):
 
     def forward(self, features):
         output, _ = self.model(features)
-        print("output shape:", output.shape)
-        print("linear shape:", self.linear(output).shape)
         return self.linear(output)
 
         
@@ -63,7 +61,6 @@ class ExperimentModel(nn.Module):
 
     # WIP: Stochastic
     def apply_generation(self, outputs, deterministic: bool =True, temperature: float = 1):
-        print("outputs size: ", outputs.size() )
         if deterministic:
             return outputs.argmax(1)
         else:
