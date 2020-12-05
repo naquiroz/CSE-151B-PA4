@@ -25,7 +25,7 @@ from .model_factory import get_model
 class Experiment(object):
     def __init__(self, name):
         # Load .json parameters into config_data
-        config_data = read_file_in_dir('./', name + '.json')
+        config_data = read_file_in_dir('./experiments/', name + '.json')
         if config_data is None:
             raise Exception("Configuration file doesn't exist: ", name)
 
