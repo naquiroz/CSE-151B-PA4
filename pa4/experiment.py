@@ -189,7 +189,8 @@ class Experiment(object):
                 captions = captions.to(device)
                 prediction = self.__model.forward_generate(images).to(device)
                 test_loss += self.__criterion(
-                    prediction.view(-1, vocab_size), captions.view(-1))
+                    prediction.view(-1, vocab_size),
+                    captions.view(-1),
                 ).item() / size
                 bleu1_score += bleu1(captions, prediction) / size
                 bleu4_score += bleu4(captions, prediction) / size
