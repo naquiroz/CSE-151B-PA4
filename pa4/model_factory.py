@@ -132,7 +132,9 @@ def get_model(config_data, vocab):
                 num_layers=1,
                 dropout=dropout,
             ),
-            embedding
+            embedding,
+            hidden_size=hidden_size,
+            output_size=len(vocab),
         )
     elif model_type == 'baseline_variant_rnn':
         decoder = Decoder( 
@@ -145,7 +147,7 @@ def get_model(config_data, vocab):
             ),
             embedding,
             hidden_size=hidden_size,
-            output_size=len(vocab)
+            output_size=len(vocab),
         )
     else:
         raise NotImplementedError(f'Unknown model type {model_type}')
