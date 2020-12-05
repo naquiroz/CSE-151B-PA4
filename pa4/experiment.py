@@ -199,10 +199,10 @@ class Experiment(object):
                 predictions_one_hot = one_hot(predictions_padded, vocab_size).float()
                 test_loss += self.__criterion(
                     predictions_one_hot.view(-1, vocab_size),
-                    captions.view(-1),
+                    captions_padded.view(-1),
                 ).item() / size
-                bleu1_score += bleu1(captions, predictions_one_hot) / size
-                bleu4_score += bleu4(captions, predictions_one_hot) / size
+                bleu1_score += bleu1(captions_padded, predictions_one_hot) / size
+                bleu4_score += bleu4(captions_padded, predictions_one_hot) / size
 
         result_str = (
             "Test Performance: Loss: {}, Perplexity: {}, Bleu1: {}, Bleu4: {}".format(
