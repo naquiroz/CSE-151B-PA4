@@ -99,7 +99,7 @@ class ExperimentModelVariant2(ExperimentModel):
     def forward(self, images, captions):
         encoded = self.encoder(images)
         embeddings = self.embedding(captions)
-        features = torch.
+        # features = torch.
         pass
 
 '''
