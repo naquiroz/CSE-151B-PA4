@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
-
+from torch.nn.funcional import one_hot
 from .caption_utils import *
 from .constants import ROOT_STATS_DIR
 from .dataset_factory import get_datasets
@@ -189,6 +189,7 @@ class Experiment(object):
                 captions = captions.to(device)
 
                 prediction = self.__model.forward_generate(images).to(device)
+                prediction = one_hot(prediction, vocab_size)
                 test_loss += self.__criterion(
                     prediction.view(-1, vocab_size),
                     captions.view(-1),
