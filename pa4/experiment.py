@@ -50,6 +50,7 @@ class Experiment(object):
         self.__best_model = (
             None  # Save your best model in this field and use this in test method.
         )
+        self.__best_model_state = None
 
         # Init Model
         self.__model = get_model(config_data, self.__vocab)
@@ -108,70 +109,65 @@ class Experiment(object):
             self.__log_epoch_stats(start_time)
             self.__save_model()
 
-    # TODO: Perform one training iteration on the whole dataset and return loss value
-    def __train(self):
-        self.__model.train()
+
+    def __forward(self, train: bool = False):
+        if train:
+            self.__model.train()
+            loader = self.__train_loader
+        else:
+            self.__model.eval()
+            loader = self.__val_loader
 
         device = self.device
         vocab_size = len(self.__vocab)
-        size = len(self.__train_loader)
+        size = len(loader)
 
-        training_loss = 0
+        total_loss = 0
 
-        for i, (images, captions, _) in enumerate(self.__train_loader):
+        for i, (images, captions, _) in enumerate(loader):
 
             images = images.to(device)
             captions = captions.to(device)
 
-            self.__optimizer.zero_grad()
+            if train:
+                self.__optimizer.zero_grad()
 
-            with torch.set_grad_enabled(True):
+            with torch.set_grad_enabled(train):
                 output = self.__model(images, captions)
 
                 loss = self.__criterion(output.view(-1, vocab_size), captions.view(-1))
 
-                training_loss += loss / size
+                total_loss += loss / size
+        
+                if train:
+                    loss.backward()
+                    self.__optimizer.step()
+        state_dict = self.__model.state_dict()
 
-                loss.backward()
-                self.__optimizer.step()
+        losses = self.__training_losses if train else self.__val_losses
+        losses.append(total_loss)
 
-        self.__training_losses.append(training_loss)
+        return total_loss
 
-        return training_loss
+
+    # TODO: Perform one training iteration on the whole dataset and return loss value
+    def __train(self):
+        return self.__forward(train=True)
 
     
     
     # TODO: Perform one Pass on the validation set and return loss value. You may also update your best model here.
     def __val(self):
-        self.__model.eval()
-
-        device = self.device
-        val_loss = 0
-
-        size = len(self.__val_loader)
-
-        with torch.no_grad():
-            for i, (images, captions, _) in enumerate(self.__val_loader):
-                images = images.to(device)
-                captions = captions.to(device)
-                print("captions type: ", type(captions))
-
-                output = self.__model(images, captions).to(device)
-
-                loss = self.__criterion(
-                    output.reshape(-1, output.shape[2]), captions.reshape(-1)
-                )
-
-                val_loss += loss / size
-
-            self.__val_losses.append(val_loss)
-
-        return val_loss
+        loss = self.__forward(train=False)
+        if len(self.__val_losses) < 2 or loss < self.__val_losses[-2]:
+            self.__best_model_state = self.__model.state_dict()
+        return loss
 
     # TODO: Implement your test function here. Generate sample captions and evaluate loss and
     #  bleu scores using the best model. Use utility functions provided to you in caption_utils.
     #  Note than you'll need image_ids and COCO object in this case to fetch all captions to generate bleu scores.
     def test(self):
+        self.__model = self.__model.load_state_dict(self.__best_model_state)
         self.__model.eval()
 
         device = self.device
