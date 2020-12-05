@@ -110,7 +110,7 @@ class Experiment(object):
             self.__save_model()
 
     def __one_hot_to_number(self, word):
-        return self.__vocab(word.argmax())
+        return self.__vocab(word.argmax().item())
 
     def __debug(self, captions):
         first_five = captions[:5]
